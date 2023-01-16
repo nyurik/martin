@@ -75,10 +75,7 @@ impl IdResolver {
     pub fn resolve(&self, name: &str, unique_name: String) -> String {
         // Ensure name has no prohibited characters like spaces, commas, slashes, or non-unicode etc.
         // Underscores, dashes, and dots are OK. All other characters will be replaced with dashes.
-        let mut name = name.replace(
-            |c: char| !c.is_ascii_alphanumeric() && c != '_' && c != '.' && c != '-',
-            "-",
-        );
+        let mut name = name.replace(|v| !is_valid_id_char(v), "-");
 
         let mut names = self.names.lock().expect("IdResolver panicked");
         if !self.reserved.contains(name.as_str()) {
@@ -117,6 +114,10 @@ impl IdResolver {
             }
         }
     }
+}
+
+pub fn is_valid_id_char(ch: char) -> bool {
+    ch.is_ascii_alphanumeric() || ch == '_' || ch == '.' || ch == '-'
 }
 
 #[cfg(test)]

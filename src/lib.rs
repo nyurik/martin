@@ -10,6 +10,7 @@
 pub mod args;
 mod config;
 pub mod file_config;
+pub mod files;
 pub mod mbtiles;
 pub mod pg;
 pub mod pmtiles;

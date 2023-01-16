@@ -400,7 +400,8 @@ fn to_encoding(val: ContentEncoding) -> Option<Encoding> {
 }
 
 pub fn router(cfg: &mut web::ServiceConfig) {
-    cfg.service(get_health)
+    cfg.service(configure_files())
+        .service(get_health)
         .service(get_index)
         .service(get_catalog)
         .service(git_source_info)
@@ -439,6 +440,13 @@ pub fn new_server(config: SrvConfig, sources: Sources) -> crate::Result<(Server,
     .run();
 
     Ok((server, listen_addresses))
+}
+
+#[must_use]
+pub fn configure_files() -> actix_files::Files {
+    actix_files::Files::new("/maputnik", "./maputnik")
+        .redirect_to_slash_directory()
+        .index_file("index.html")
 }
 
 fn check_zoom(src: &dyn Source, id: &str, zoom: u8) -> bool {
