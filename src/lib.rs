@@ -10,12 +10,12 @@
 pub mod args;
 mod config;
 pub mod file_config;
-pub mod files;
 pub mod mbtiles;
 pub mod pg;
 pub mod pmtiles;
 mod source;
 pub mod srv;
+pub mod statics;
 mod utils;
 
 #[cfg(test)]

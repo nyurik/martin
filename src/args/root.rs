@@ -8,6 +8,7 @@ use crate::args::environment::Env;
 use crate::args::pg::PgArgs;
 use crate::args::srv::SrvArgs;
 use crate::args::State::{Ignore, Share, Take};
+use crate::args::StaticsArgs;
 use crate::config::Config;
 use crate::file_config::FileConfigEnum;
 use crate::{Error, Result};
@@ -19,6 +20,8 @@ pub struct Args {
     pub meta: MetaArgs,
     #[command(flatten)]
     pub srv: SrvArgs,
+    #[command(flatten)]
+    pub statics: StaticsArgs,
     #[command(flatten)]
     pub pg: Option<PgArgs>,
 }
@@ -56,6 +59,7 @@ impl Args {
         }
 
         self.srv.merge_into_config(&mut config.srv);
+        self.statics.merge_into_config(&mut config.statics);
 
         let mut cli_strings = Arguments::new(self.meta.connection);
         let pg_args = self.pg.unwrap_or_default();

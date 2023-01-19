@@ -16,6 +16,7 @@ use crate::pg::PgConfig;
 use crate::pmtiles::PmtSource;
 use crate::source::{IdResolver, Sources};
 use crate::srv::SrvConfig;
+use crate::statics::StaticsConfig;
 use crate::utils::{OneOrMany, Result};
 use crate::Error::{ConfigLoadError, ConfigParseError, NoSources};
 
@@ -23,6 +24,9 @@ use crate::Error::{ConfigLoadError, ConfigParseError, NoSources};
 pub struct Config {
     #[serde(flatten)]
     pub srv: SrvConfig,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub statics: Option<StaticsConfig>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
     pub postgres: Option<OneOrMany<PgConfig>>,
