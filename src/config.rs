@@ -25,8 +25,8 @@ pub struct Config {
     #[serde(flatten)]
     pub srv: SrvConfig,
 
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub statics: Option<StaticsConfig>,
+    #[serde(flatten)]
+    pub statics: StaticsConfig,
 
     #[serde(skip_serializing_if = "Option::is_none")]
     pub postgres: Option<OneOrMany<PgConfig>>,
@@ -66,6 +66,13 @@ impl Config {
         any |= if let Some(cfg) = &mut self.mbtiles {
             res.extend(cfg.finalize("mbtiles.")?);
             !cfg.is_empty()
+        } else {
+            false
+        };
+
+        res.extend(self.statics.finalize()?);
+        any |= if let Some(files) = &mut self.statics.files {
+            !files.is_empty()
         } else {
             false
         };

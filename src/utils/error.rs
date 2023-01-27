@@ -34,4 +34,7 @@ pub enum Error {
 
     #[error("{0}")]
     FileError(#[from] FileError),
+
+    #[error("Configuration and command line parameters resulted in the same source ID: {0}")]
+    DuplicateSourceId(String),
 }

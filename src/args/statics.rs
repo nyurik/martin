@@ -1,5 +1,6 @@
-use crate::source::is_valid_id_char;
 use crate::statics::{StaticsConfig, StaticsSourceEnum};
+use crate::{Error, Result};
+use std::collections::hash_map::Entry;
 use std::collections::HashMap;
 use std::path::PathBuf;
 
@@ -10,20 +11,14 @@ pub struct StaticsArgs {
     /// The name of the file or directory is used as the URL path, e.g. `-f foo` will make the
     /// content of the directory `foo` available as `/foo/*`.
     #[arg(short, long)]
-    pub files: Option<Vec<String>>,
+    pub files: Option<Vec<PathBuf>>,
 }
 
 impl StaticsArgs {
-    pub fn merge_into_config(self, config: &mut Option<StaticsConfig>) {
-        let files = self.files.map(|v| {
+    pub fn merge_into_config(self, config: &mut StaticsConfig) -> Result<()> {
+        let files: Option<HashMap<String, StaticsSourceEnum>> = self.files.map(|v| {
             v.into_iter()
                 .filter_map(|value| {
-                    if let Some((k, v)) = value.split_once(':') {
-                        // if all characters in k are valid ID characters, treat it as a source ID
-                        if !v.starts_with("//") && k.chars().all(is_valid_id_char) {
-                            return Some((k.to_string(), StaticsSourceEnum::Simple(v.to_string())));
-                        }
-                    }
                     PathBuf::from(&value).file_stem().map(|v| {
                         let id = v.to_string_lossy().to_string();
                         (id, StaticsSourceEnum::Simple(value))
@@ -32,9 +27,27 @@ impl StaticsArgs {
                 .collect()
         });
 
-        config
-            .files
-            .filter(|v: &HashMap<String, StaticsSourceEnum>| !v.is_empty())
-            .map(|files| StaticsConfig { files })
+        *config = match (files, config.files.take()) {
+            (Some(args), Some(mut cfg)) => {
+                //merge two hashmaps, erroring out if there are duplicate keys
+                for (k, v) in args {
+                    match cfg.entry(k) {
+                        Entry::Occupied(e) => {
+                            if e.get() != &v {
+                                return Err(Error::DuplicateSourceId(e.key().to_string()));
+                            }
+                        }
+                        Entry::Vacant(e) => {
+                            e.insert(v);
+                        }
+                    }
+                }
+                StaticsConfig { files: Some(cfg) }
+            }
+            (Some(files), None) => StaticsConfig { files: Some(files) },
+            (None, files) => StaticsConfig { files },
+        };
+
+        Ok(())
     }
 }

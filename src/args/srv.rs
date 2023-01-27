@@ -13,7 +13,7 @@ pub struct SrvArgs {
 }
 
 impl SrvArgs {
-    pub(crate) fn merge_into_config(self, srv_config: &mut SrvConfig) {
+    pub fn merge_into_config(self, srv_config: &mut SrvConfig) {
         // Override config values with the ones from the command line
         if self.keep_alive.is_some() {
             srv_config.keep_alive = self.keep_alive;

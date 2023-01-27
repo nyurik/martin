@@ -59,7 +59,7 @@ impl Args {
         }
 
         self.srv.merge_into_config(&mut config.srv);
-        self.statics.merge_into_config(&mut config.statics);
+        self.statics.merge_into_config(&mut config.statics)?;
 
         let mut cli_strings = Arguments::new(self.meta.connection);
         let pg_args = self.pg.unwrap_or_default();
@@ -107,6 +107,7 @@ pub fn parse_file_args(cli_strings: &mut Arguments, extension: &str) -> Option<F
 mod tests {
     use super::*;
     use crate::pg::PgConfig;
+    use crate::statics::{StaticsConfig, StaticsSourceEnum};
     use crate::test_utils::{some, FauxEnv};
     use crate::utils::OneOrMany;
 
@@ -122,6 +123,34 @@ mod tests {
     fn cli_no_args() {
         let args = parse(&["martin"]).unwrap();
         let expected = (Config::default(), MetaArgs::default());
+        assert_eq!(args, expected);
+    }
+
+    #[test]
+    fn cli_statics() {
+        let args = parse(&["martin", "--files", "foo", "--files", "bar"]).unwrap();
+        let expected = (
+            Config {
+                statics: StaticsConfig {
+                    files: Some(
+                        vec![
+                            (
+                                "foo".into(),
+                                StaticsSourceEnum::Simple(PathBuf::from("foo")),
+                            ),
+                            (
+                                "bar".into(),
+                                StaticsSourceEnum::Simple(PathBuf::from("bar")),
+                            ),
+                        ]
+                        .into_iter()
+                        .collect(),
+                    ),
+                },
+                ..Config::default()
+            },
+            MetaArgs::default(),
+        );
         assert_eq!(args, expected);
     }
 
