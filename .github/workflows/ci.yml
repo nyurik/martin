@@ -31,82 +31,21 @@ jobs:
       fail-fast: true
       matrix:
         include:
-          - target: aarch64-apple-darwin
-            os: macOS-latest
-            cross: 'true'
           - target: aarch64-unknown-linux-gnu
             os: ubuntu-latest
             cross: 'true'
           - target: debian-x86_64
             os: ubuntu-latest
             cross: 'true'
-          - target: x86_64-apple-darwin
-            os: macOS-latest
-          - target: x86_64-pc-windows-msvc
-            os: windows-latest
-            ext: '.exe'
           - target: x86_64-unknown-linux-gnu
             os: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Rust Versions
-        run: rustc --version && cargo --version
-      - name: Lint (Linux)
-        if: matrix.target == 'x86_64-unknown-linux-gnu'
-        run: |
-          set -x
-          cargo fmt --all -- --check
-          cargo clippy --package martin-tile-utils -- -D warnings
-          cargo clippy --package martin-mbtiles -- -D warnings
-          cargo clippy --package martin-mbtiles --no-default-features --features native-tls -- -D warnings
-          cargo clippy --package martin-mbtiles --no-default-features --features rustls -- -D warnings
-          cargo clippy --package martin -- -D warnings
-          cargo clippy --package martin --features vendored-openssl -- -D warnings
-          cargo clippy --package martin --features bless-tests -- -D warnings
-      - name: Install OpenSSL (Windows)
-        if: runner.os == 'Windows'
-        shell: powershell
-        run: |
-          echo "VCPKG_ROOT=$env:VCPKG_INSTALLATION_ROOT" | Out-File -FilePath $env:GITHUB_ENV -Append
-          vcpkg install openssl:x64-windows-static-md
-      - name: Build (native)
-        if: matrix.cross != 'true'
-        run: |
-          cargo build --release --target ${{ matrix.target }} --features=ssl --package martin
-          cargo build --release --target ${{ matrix.target }} --features=cli --package martin-mbtiles
-      - name: Build (cross - aarch64-apple-darwin)
-        if: matrix.target == 'aarch64-apple-darwin'
-        run: |
-          rustup target add "${{ matrix.target }}"
-          # compile without debug symbols because stripping them with `strip` does not work cross-platform
-          export RUSTFLAGS='-C link-arg=-s'
-          cargo build --release --target ${{ matrix.target }} --features=vendored-openssl --package martin
-          cargo build --release --target ${{ matrix.target }} --no-default-features --features=rustls,cli --package martin-mbtiles
-      - name: Build (cross - aarch64-unknown-linux-gnu)
-        if: matrix.target == 'aarch64-unknown-linux-gnu'
-        run: |
-          sudo apt-get install -y gcc-aarch64-linux-gnu binutils-aarch64-linux-gnu
-          rustup target add "${{ matrix.target }}"
-          # compile without debug symbols because stripping them with `strip` does not work cross-platform
-          export RUSTFLAGS='-C link-arg=-s -C linker=aarch64-linux-gnu-gcc'
-          cargo build --release --target ${{ matrix.target }} --features=vendored-openssl --package martin
-          cargo build --release --target ${{ matrix.target }} --no-default-features --features=rustls,cli --package martin-mbtiles
-      - name: Build (debian package)
-        if: matrix.target == 'debian-x86_64'
-        run: |
-          sudo apt-get install -y dpkg dpkg-dev liblzma-dev
-          cargo install cargo-deb
-          cargo deb -v -p martin --output target/debian/debian-x86_64.deb
       - name: Move build artifacts
         run: |
-          mkdir -p target_releases
-          if [[ "${{ matrix.target }}" == "debian-x86_64" ]]; then
-            mv target/debian/debian-x86_64.deb target_releases
-          else
-            mv target/${{ matrix.target }}/release/martin${{ matrix.ext }} target_releases
-            mv target/${{ matrix.target }}/release/mbtiles${{ matrix.ext }} target_releases
-          fi
+          mkdir -p target_releases/
+          unzip -o build-${{ matrix.target }}.zip -d target_releases/
       - name: Save build artifacts to build-${{ matrix.target }}
         uses: actions/upload-artifact@v3
         with:
@@ -121,11 +60,6 @@ jobs:
       fail-fast: true
       matrix:
         include:
-          - target: x86_64-apple-darwin
-            os: macOS-latest
-          - target: x86_64-pc-windows-msvc
-            os: windows-latest
-            ext: '.exe'
           - target: x86_64-unknown-linux-gnu
             os: ubuntu-latest
     steps:
@@ -458,23 +392,10 @@ jobs:
       fail-fast: true
       matrix:
         include:
-          - target: aarch64-apple-darwin
-            os: ubuntu-latest
-            name: martin-Darwin-aarch64.tar.gz
-            cross: 'true'
-            sha: 'true'
           - target: aarch64-unknown-linux-gnu
             os: ubuntu-latest
             name: martin-Linux-aarch64.tar.gz
             cross: 'true'
-          - target: x86_64-apple-darwin
-            os: macOS-latest
-            name: martin-Darwin-x86_64.tar.gz
-            sha: 'true'
-          - target: x86_64-pc-windows-msvc
-            os: windows-latest
-            name: martin-Windows-x86_64.zip
-            ext: '.exe'
           - target: x86_64-unknown-linux-gnu
             os: ubuntu-latest
             name: martin-Linux-x86_64.tar.gz
