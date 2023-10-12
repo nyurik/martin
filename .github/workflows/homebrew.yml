@@ -26,6 +26,9 @@ jobs:
 #      - run: brew tap maplibre/martin
 #      - run: brew install martin
 
+      - name: Checkout sources
+        uses: actions/checkout@v4
+
       - name: Checkout maplibre/homebrew-martin
         # if: startsWith(github.ref, 'refs/tags/')
         uses: actions/checkout@v4
