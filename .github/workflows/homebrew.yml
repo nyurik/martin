@@ -1,15 +1,30 @@
 name: Homebrew
 
-on: [pull_request]
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+    paths-ignore:
+      - '**.md'
+      - 'demo/**'
+      - 'docs/**'
+  release:
+    types: [ published ]
+  workflow_dispatch:
+
+defaults:
+  run:
+    shell: bash
 
 jobs:
   test:
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
 
     steps:
-      - run: brew --version
-      - run: brew tap maplibre/martin
-      - run: brew install martin
+#      - run: brew --version
+#      - run: brew tap maplibre/martin
+#      - run: brew install martin
 
       - name: Checkout maplibre/homebrew-martin
         # if: startsWith(github.ref, 'refs/tags/')
@@ -39,7 +54,7 @@ jobs:
           EOF
 
       - name: Create Homebrew formula
-        # if: startsWith(github.ref, 'refs/tags/')
+        if: startsWith(github.ref, 'refs/tags/')
         uses: cuchi/jinja2-action@v1.2.0
         with:
           template: .github/templates/homebrew.martin.rb.j2
@@ -47,7 +62,7 @@ jobs:
           data_file: target/homebrew_config.yaml
 
       - name: Create a PR for maplibre/homebrew-martin
-        # if: startsWith(github.ref, 'refs/tags/')
+        if: startsWith(github.ref, 'refs/tags/')
         uses: peter-evans/create-pull-request@v3
         with:
           token: ${{ secrets.GH_HOMEBREW_MARTIN_TOKEN }}
