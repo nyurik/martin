@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-MARTIN_DATABASE_URL="${DATABASE_URL:-postgres://postgres:postgres@localhost:5411/db}"
+MARTIN_DATABASE_URL="${DATABASE_URL:-postgres://postgres:postgres@localhost/db}"
 unset DATABASE_URL
 
 # TODO: use  --fail-with-body  to get the response body on failure
