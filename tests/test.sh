@@ -9,7 +9,7 @@ CURL=${CURL:-curl --silent --show-error --fail --compressed}
 
 MARTIN_BUILD_ALL="${MARTIN_BUILD_ALL:-cargo build}"
 
-STATICS_URL="${STATICS_URL:-http://localhost:5412}"
+STATICS_URL="${STATICS_URL:-0.0.0.0:5412}"
 MARTIN_PORT="${MARTIN_PORT:-3111}"
 MARTIN_URL="http://localhost:${MARTIN_PORT}"
 MARTIN_ARGS="${MARTIN_ARGS:---listen-addresses localhost:${MARTIN_PORT}}"
