@@ -114,7 +114,7 @@ jobs:
         ports:
           - 5412:80
         volumes:
-          - tests/fixtures/pmtiles2:/usr/share/nginx/html
+          - ./tests/fixtures/pmtiles2:/usr/share/nginx/html
     steps:
       - name: Checkout sources
         uses: actions/checkout@v4
