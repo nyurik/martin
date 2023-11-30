@@ -330,7 +330,7 @@ jobs:
       - name: Setup docker (missing on MacOS)
         if: runner.os == 'macos'
         run: |
-          brew install colima docker
+          brew install docker
           colima start
       - name: Start File Server
         run: |
