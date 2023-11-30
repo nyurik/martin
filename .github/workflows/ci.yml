@@ -386,7 +386,8 @@ jobs:
         if: runner.os == 'windows'
         shell: pwsh
         run: |
-          Get-Content -Path "nginx/logs/error.log"
+          #Get-Content -Path "nginx/logs/error.log"
+          dir D:\a\martin\martin\nginx
       - name: Setup tmate session
         uses: mxschmitt/action-tmate@v3
         with:
