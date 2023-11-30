@@ -351,6 +351,7 @@ jobs:
           Expand-Archive -Path "nginx.zip" -DestinationPath "nginx"
           # Create a directory for Nginx logs (required for running Nginx on Windows)
           New-Item -Path "nginx/logs" -ItemType Directory
+          Rename-Item -Path "nginx/nginx*" -NewName "nginx"
           dir D:\a\martin\martin\nginx
           # Replace the default Nginx configuration file
           $nginxConf = "worker_processes  1; `r`n" +
