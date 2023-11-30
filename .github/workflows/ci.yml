@@ -114,7 +114,8 @@ jobs:
       #   ports:
       #     - 5412:80
       #   volumes:
-      #     - ${{ github.workspace }}/tests/fixtures/pmtiles2:/usr/share/nginx/html
+      #     - ./tests/fixtures/pmtiles2:/usr/share/nginx/html
+
     steps:
       - name: Checkout sources
         uses: actions/checkout@v4
@@ -322,13 +323,6 @@ jobs:
             ext: '.exe'
           - target: x86_64-unknown-linux-gnu
             os: ubuntu-latest
-    services:
-      fileserver:
-        image: nginx:alpine
-        ports:
-          - 5412:80
-        volumes:
-          - ${{ github.workspace }}/tests/fixtures/pmtiles2:/usr/share/nginx/html
     steps:
       - name: Checkout sources
         uses: actions/checkout@v4
@@ -339,13 +333,48 @@ jobs:
         run: |
           brew install docker
           colima start
-      - name: Start File Server
+      - name: Start File Server (on non-Windows systems)
+        if: runner.os != 'windows'
         run: |
           docker run -d \
           --name fileserver \
           -p 5412:80 \
           -v ${{ github.workspace }}/tests/fixtures/pmtiles2:/usr/share/nginx/html \
           nginx:alpine
+      - name: Setup Nginx (on Windows systems that do not support Linux containers)
+        if: runner.os == 'windows'
+        run: |
+          # Download Nginx for Windows
+          Invoke-WebRequest -Uri "http://nginx.org/download/nginx-1.20.1.zip" -OutFile "nginx.zip"
+          # Unzip
+          Expand-Archive -Path "nginx.zip" -DestinationPath "nginx"
+          # Create a directory for Nginx logs (required for running Nginx on Windows)
+          New-Item -Path "nginx/logs" -ItemType Directory
+          # Replace the default Nginx configuration file
+          $nginxConf = "worker_processes  1; `r`n" +
+                        "events { `r`n" +
+                        "    worker_connections  1024; `r`n" +
+                        "} `r`n" +
+                        "http { `r`n" +
+                        "    include       mime.types; `r`n" +
+                        "    default_type  application/octet-stream; `r`n" +
+                        "    sendfile        on; `r`n" +
+                        "    keepalive_timeout  65; `r`n" +
+                        "    server { `r`n" +
+                        "        listen       80; `r`n" +
+                        "        server_name  localhost; `r`n" +
+                        "        location / { `r`n" +
+                        "            root   " + $PWD.Path + "/tests/fixtures/pmtiles2; `r`n" +
+                        "            index  index.html index.htm; `r`n" +
+                        "        } `r`n" +
+                        "    } `r`n" +
+                        "}"
+          Set-Content -Path "nginx/conf/nginx.conf" -Value $nginxConf
+      - name: Start Nginx (on Windows systems)
+        if: runner.os == 'windows'
+        run: |
+          Start-Process -FilePath "nginx/nginx-1.20.1/nginx.exe"
+
       - name: Start postgres
         uses: nyurik/action-setup-postgis@v1.1
         id: pg
