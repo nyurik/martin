@@ -343,6 +343,7 @@ jobs:
           nginx:alpine
       - name: Setup Nginx (on Windows systems that do not support Linux containers)
         if: runner.os == 'windows'
+        shell: pwsh
         run: |
           # Download Nginx for Windows
           Invoke-WebRequest -Uri "http://nginx.org/download/nginx-1.20.1.zip" -OutFile "nginx.zip"
@@ -372,6 +373,7 @@ jobs:
           Set-Content -Path "nginx/conf/nginx.conf" -Value $nginxConf
       - name: Start Nginx (on Windows systems)
         if: runner.os == 'windows'
+        shell: pwsh
         run: |
           Start-Process -FilePath "nginx/nginx-1.20.1/nginx.exe"
 
