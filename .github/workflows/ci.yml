@@ -346,11 +346,12 @@ jobs:
         shell: pwsh
         run: |
           # Download Nginx for Windows
-          Invoke-WebRequest -Uri "http://nginx.org/download/nginx-1.20.1.zip" -OutFile "nginx.zip"
+          Invoke-WebRequest -Uri "http://nginx.org/download/nginx-1.24.0.zip" -OutFile "nginx.zip"
           # Unzip
           Expand-Archive -Path "nginx.zip" -DestinationPath "nginx"
           # Create a directory for Nginx logs (required for running Nginx on Windows)
           New-Item -Path "nginx/logs" -ItemType Directory
+          dir D:\a\martin\martin\nginx
           # Replace the default Nginx configuration file
           $nginxConf = "worker_processes  1; `r`n" +
                         "events { `r`n" +
