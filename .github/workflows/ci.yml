@@ -109,12 +109,12 @@ jobs:
           --entrypoint sh
           postgis/postgis:15-3.3
           -c "exec docker-entrypoint.sh postgres -c ssl=on -c ssl_cert_file=/etc/ssl/certs/ssl-cert-snakeoil.pem -c ssl_key_file=/etc/ssl/private/ssl-cert-snakeoil.key"
-      fileserver:
-        image: nginx:alpine
-        ports:
-          - 5412:80
-        volumes:
-          - ./tests/fixtures/pmtiles2:/usr/share/nginx/html
+      # fileserver:
+      #   image: nginx:alpine
+      #   ports:
+      #     - 5412:80
+      #   volumes:
+      #     - ./tests/fixtures/pmtiles2:/usr/share/nginx/html
     steps:
       - name: Checkout sources
         uses: actions/checkout@v4
@@ -173,6 +173,13 @@ jobs:
           mkdir -p target_releases/linux/amd64
           mv target_releases/x86_64-unknown-linux-musl/* target_releases/linux/amd64/
 
+      - name: Start File Server
+        run: |
+          docker run -d \
+          --name fileserver \
+          -p 5412:80 \
+          -v ${{ github.workspace }}/tests/fixtures/pmtiles2:/usr/share/nginx/html \
+          nginx:alpine
       - name: Build linux/arm64 Docker image
         uses: docker/build-push-action@v5
         # https://github.com/docker/build-push-action
@@ -240,6 +247,11 @@ jobs:
           tags: ${{ steps.docker_meta.outputs.tags }}
           labels: ${{ steps.docker_meta.outputs.labels }}
           platforms: linux/amd64,linux/arm64
+      - name: Stop File Server
+        if: always()
+        run: |
+          docker stop fileserver
+          docker rm fileserver
 
   build:
     name: Build ${{ matrix.target }}
