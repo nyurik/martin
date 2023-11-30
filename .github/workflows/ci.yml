@@ -370,7 +370,7 @@ jobs:
                         "        listen       5412; `r`n" +
                         "        server_name  localhost; `r`n" +
                         "        location / { `r`n" +
-                        "            root   " + ${{github.workspace}} + "/tests/fixtures/pmtiles2; `r`n" +
+                        "            root   " + $PWD.Path + "/tests/fixtures/pmtiles2; `r`n" +
                         "            index  index.html index.htm; `r`n" +
                         "        } `r`n" +
                         "    } `r`n" +
