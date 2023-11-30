@@ -367,7 +367,7 @@ jobs:
                         "    sendfile        on; `r`n" +
                         "    keepalive_timeout  65; `r`n" +
                         "    server { `r`n" +
-                        "        listen       80; `r`n" +
+                        "        listen       5412; `r`n" +
                         "        server_name  localhost; `r`n" +
                         "        location / { `r`n" +
                         "            root   " + $PWD.Path + "/tests/fixtures/pmtiles2; `r`n" +
@@ -436,7 +436,7 @@ jobs:
         env:
           DATABASE_URL: ${{ steps.pg.outputs.connection-uri }}
       - name: Stop File Server
-        if: always()
+        if: runner.os != 'windows'
         run: |
           docker stop fileserver
           docker rm fileserver
