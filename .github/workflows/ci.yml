@@ -380,7 +380,7 @@ jobs:
         if: runner.os == 'windows'
         shell: pwsh
         run: |
-          Start-Process -FilePath "nginx/nginx-1.20.1/nginx.exe"
+          Start-Process -FilePath "nginx/nginx.exe"
 
       - name: Start postgres
         uses: nyurik/action-setup-postgis@v1.1
