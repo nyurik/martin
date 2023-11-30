@@ -370,7 +370,7 @@ jobs:
                         "        listen       5412; `r`n" +
                         "        server_name  localhost; `r`n" +
                         "        location / { `r`n" +
-                        "            root   " + $PWD.Path + "/tests/fixtures/pmtiles2; `r`n" +
+                        "            root   " + ${{github.workspace}} + "/tests/fixtures/pmtiles2; `r`n" +
                         "            index  index.html index.htm; `r`n" +
                         "        } `r`n" +
                         "    } `r`n" +
@@ -381,7 +381,16 @@ jobs:
         shell: pwsh
         run: |
           Start-Process -FilePath "nginx/nginx.exe"
-
+          Start-Sleep -Seconds 5
+      - name: Print Nginx Error Logs (on Windows systems)
+        if: runner.os == 'windows'
+        shell: pwsh
+        run: |
+          Get-Content -Path "nginx/logs/error.log"
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+        with:
+          detached: true
       - name: Start postgres
         uses: nyurik/action-setup-postgis@v1.1
         id: pg
