@@ -114,7 +114,7 @@ jobs:
       #   ports:
       #     - 5412:80
       #   volumes:
-      #     - ./tests/fixtures/pmtiles2:/usr/share/nginx/html
+      #     - ${{ github.workspace }}/tests/fixtures/pmtiles2:/usr/share/nginx/html
     steps:
       - name: Checkout sources
         uses: actions/checkout@v4
@@ -322,6 +322,13 @@ jobs:
             ext: '.exe'
           - target: x86_64-unknown-linux-gnu
             os: ubuntu-latest
+    services:
+      fileserver:
+        image: nginx:alpine
+        ports:
+          - 5412:80
+        volumes:
+          - ${{ github.workspace }}/tests/fixtures/pmtiles2:/usr/share/nginx/html
     steps:
       - name: Checkout sources
         uses: actions/checkout@v4
