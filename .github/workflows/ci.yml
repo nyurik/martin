@@ -369,6 +369,7 @@ jobs:
         if: runner.os == 'windows'
         shell: pwsh
         run: |
+          Start-Process powershell -Verb runAs
           Start-Service -Name "nginx"
           Start-Sleep -Seconds 5
       - name: Print Nginx Error Logs (on Windows systems)
