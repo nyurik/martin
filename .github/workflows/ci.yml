@@ -261,19 +261,19 @@ jobs:
       fail-fast: true
       matrix:
         include:
-          # - target: aarch64-apple-darwin
-          #   os: macOS-latest
-          #   cross: 'true'
-          # - target: debian-x86_64
-          #   os: ubuntu-latest
-          #   cross: 'true'
-          # - target: x86_64-apple-darwin
-          #   os: macOS-latest
+          - target: aarch64-apple-darwin
+            os: macOS-latest
+            cross: 'true'
+          - target: debian-x86_64
+            os: ubuntu-latest
+            cross: 'true'
+          - target: x86_64-apple-darwin
+            os: macOS-latest
           - target: x86_64-pc-windows-msvc
             os: windows-latest
             ext: '.exe'
-          # - target: x86_64-unknown-linux-gnu
-          #   os: ubuntu-latest
+          - target: x86_64-unknown-linux-gnu
+            os: ubuntu-latest
     steps:
       - name: Checkout sources
         uses: actions/checkout@v4
@@ -377,10 +377,10 @@ jobs:
       #   run: |
       #     #Get-Content -Path "nginx/logs/error.log"
       #     dir D:\a\martin\martin\nginx
-      - name: Setup tmate session
-        uses: mxschmitt/action-tmate@v3
-        with:
-          detached: true
+      # - name: Setup tmate session
+      #   uses: mxschmitt/action-tmate@v3
+      #   with:
+      #     detached: true
       - name: Start postgres
         uses: nyurik/action-setup-postgis@v1.1
         id: pg
