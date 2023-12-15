@@ -345,17 +345,6 @@ jobs:
         if: runner.os == 'windows'
         shell: pwsh
         run: |
-          # Download Nginx for Windows
-          Invoke-WebRequest -Uri "http://nginx.org/download/nginx-1.24.0.zip" -OutFile "nginx.zip"
-          # Unzip
-          Expand-Archive -Path "nginx.zip" -DestinationPath "nginx"
-          Rename-Item -Path "nginx/nginx*" -NewName "nginx"
-          Move-Item -Path "nginx/nginx" -Destination "." -Force
-
-          # Create a directory for Nginx logs (required for running Nginx on Windows)
-          New-Item -Path "/nginx/logs" -ItemType Directory
-
-          dir D:\a\martin\martin\nginx
           # Replace the default Nginx configuration file
           $nginxConf = "worker_processes  1; `r`n" +
                         "events { `r`n" +
@@ -375,12 +364,12 @@ jobs:
                         "        } `r`n" +
                         "    } `r`n" +
                         "}"
-          Set-Content -Path "nginx/conf/nginx.conf" -Value $nginxConf
+          Set-Content -Path "C:\tools\nginx-1.25.3\conf\nginx.conf" -Value $nginxConf
       - name: Start Nginx (on Windows systems)
         if: runner.os == 'windows'
         shell: pwsh
         run: |
-          Start-Process -FilePath "nginx/nginx.exe"
+          Start-Service -Name "nginx"
           Start-Sleep -Seconds 5
       - name: Print Nginx Error Logs (on Windows systems)
         if: runner.os == 'windows'
