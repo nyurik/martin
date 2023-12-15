@@ -159,12 +159,15 @@ test-int: clean-test install-sqlx
     fi
 
 # Run integration tests and save its output as the new expected output
-bless: restart clean-test bless-insta-martin bless-insta-mbtiles
+bless: restart clean-test bless-insta-martin bless-insta-mbtiles bless-tests
     rm -rf tests/temp
-    cargo test -p martin --features bless-tests
     tests/test.sh
     rm -rf tests/expected
     mv tests/output tests/expected
+
+# Run test with bless-tests feature
+bless-tests:
+    cargo test -p martin --features bless-tests
 
 # Run integration tests and save its output as the new expected output
 bless-insta-mbtiles *ARGS: (cargo-install "cargo-insta")
@@ -257,6 +260,10 @@ lint: fmt clippy
 fmt:
     cargo fmt --all -- --check
 
+# Reformat markdown files using markdownlint-cli2
+fmt-md:
+    docker run -it --rm -v $PWD:/workdir davidanson/markdownlint-cli2 --config /workdir/.github/files/config.markdownlint-cli2.jsonc --fix
+
 # Run Nightly cargo fmt, ordering imports
 fmt2:
     cargo +nightly fmt -- --config imports_granularity=Module,group_imports=StdExternalCrate
@@ -265,6 +272,11 @@ fmt2:
 clippy:
     cargo clippy --workspace --all-targets --bins --tests --lib --benches -- -D warnings
     RUSTDOCFLAGS="-D warnings" cargo doc --no-deps --workspace
+
+# Validate markdown URLs with markdown-link-check
+clippy-md:
+    docker run -it --rm -v ${PWD}:/workdir --entrypoint sh ghcr.io/tcort/markdown-link-check -c \
+      'echo -e "/workdir/README.md\n$(find /workdir/docs/src -name "*.md")" | tr "\n" "\0" | xargs -0 -P 5 -n1 -I{} markdown-link-check --config /workdir/.github/files/markdown.links.config.json {}'
 
 # These steps automatically run before git push via a git hook
 [private]

@@ -10,6 +10,7 @@ Function Source is a database function which can be used to query [vector tiles]
 | query (optional, any name) | json    | Query string parameters |
 
 ### Simple Function
+
 For example, if you have a table `table_source` in WGS84 (`4326` SRID), then you can use this function as a Function Source:
 
 ```sql, ignore
@@ -35,6 +36,7 @@ $$ LANGUAGE plpgsql IMMUTABLE STRICT PARALLEL SAFE;
 ```
 
 ### Function with Query Parameters
+
 Users may add a `query` parameter to pass additional parameters to the function.
 
 _**TODO**: Modify this example to actually use the query parameters._
@@ -120,7 +122,7 @@ To modify automatically generated `TileJSON`, you can add a valid JSON as an SQL
 
 ```sql
 DO $do$ BEGIN
-    EXECUTE 'COMMENT ON FUNCTION my_function_name(INT4, INT4, INT4) IS $tj$' || $$
+    EXECUTE 'COMMENT ON FUNCTION my_function_name IS $tj$' || $$
     {
         "description": "my new description",
         "attribution": "my attribution",

@@ -1,4 +1,3 @@
-use std::f64::consts::PI;
 use std::fmt::{Debug, Display, Formatter};
 use std::path::PathBuf;
 use std::sync::atomic::{AtomicU64, Ordering};
@@ -17,7 +16,7 @@ use martin::{
     append_rect, read_config, Config, IdResolver, MartinError, MartinResult, ServerState, Source,
     TileCoord, TileData, TileRect,
 };
-use martin_tile_utils::TileInfo;
+use martin_tile_utils::{bbox_to_xyz, TileInfo};
 use mbtiles::sqlx::SqliteConnection;
 use mbtiles::{
     init_mbtiles_schema, is_empty_database, CopyDuplicateMode, MbtType, MbtTypeCli, Mbtiles,
@@ -36,7 +35,8 @@ const BATCH_SIZE: usize = 1000;
 #[derive(Parser, Debug, PartialEq, Default)]
 #[command(
     about = "A tool to bulk copy tiles from any Martin-supported sources into an mbtiles file",
-    version
+    version,
+    after_help = "Use RUST_LOG environment variable to control logging level, e.g. RUST_LOG=debug or RUST_LOG=martin_cp=debug. See https://docs.rs/env_logger/latest/env_logger/index.html#enabling-logging for more information."
 )]
 pub struct CopierArgs {
     #[command(flatten)]
@@ -79,7 +79,7 @@ pub struct CopyArgs {
     /// Number of concurrent connections to use.
     #[arg(long, default_value = "1")]
     pub concurrency: Option<usize>,
-    /// Bounds to copy. Can be specified multiple times. Overlapping regions will be handled correctly.
+    /// Bounds to copy, in the format `min_lon,min_lat,max_lon,max_lat`. Can be specified multiple times. Overlapping regions will be handled correctly.
     #[arg(long)]
     pub bbox: Vec<Bounds>,
     /// Minimum zoom level to copy
@@ -96,6 +96,25 @@ pub struct CopyArgs {
     /// List of zoom levels to copy
     #[arg(short, long, alias = "zooms", value_delimiter = ',')]
     pub zoom_levels: Vec<u8>,
+    /// Skip generating a global hash for mbtiles validation. By default, `martin-cp` will compute and update `agg_tiles_hash` metadata value.
+    #[arg(long)]
+    pub skip_agg_tiles_hash: bool,
+    /// Set additional metadata values. Must be set as "key=value" pairs. Can be specified multiple times.
+    #[arg(long, value_name="KEY=VALUE", value_parser = parse_key_value)]
+    pub set_meta: Vec<(String, String)>,
+}
+
+fn parse_key_value(s: &str) -> Result<(String, String), String> {
+    let mut parts = s.splitn(2, '=');
+    let key = parts.next().unwrap();
+    let value = parts
+        .next()
+        .ok_or_else(|| format!("Invalid key=value pair: {s}"))?;
+    if key.is_empty() || value.is_empty() {
+        Err(format!("Invalid key=value pair: {s}"))
+    } else {
+        Ok((key.to_string(), value.to_string()))
+    }
 }
 
 async fn start(copy_args: CopierArgs) -> MartinCpResult<()> {
@@ -131,17 +150,6 @@ async fn start(copy_args: CopierArgs) -> MartinCpResult<()> {
     run_tile_copy(copy_args.copy, sources).await
 }
 
-/// Convert longitude and latitude to tile index
-#[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
-fn tile_index(lon: f64, lat: f64, zoom: u8) -> (u32, u32) {
-    let n = f64::from(1_u32 << zoom);
-    let x = ((lon + 180.0) / 360.0 * n).floor() as u32;
-    let y = ((1.0 - (lat.to_radians().tan() + 1.0 / lat.to_radians().cos()).ln() / PI) / 2.0 * n)
-        .floor() as u32;
-    let max_value = (1_u32 << zoom) - 1;
-    (x.min(max_value), y.min(max_value))
-}
-
 fn compute_tile_ranges(args: &CopyArgs) -> Vec<TileRect> {
     let mut ranges = Vec::new();
     let mut zooms_vec = Vec::new();
@@ -159,8 +167,8 @@ fn compute_tile_ranges(args: &CopyArgs) -> Vec<TileRect> {
     };
     for zoom in zooms {
         for bbox in &boxes {
-            let (min_x, min_y) = tile_index(bbox.left, bbox.top, *zoom);
-            let (max_x, max_y) = tile_index(bbox.right, bbox.bottom, *zoom);
+            let (min_x, min_y, max_x, max_y) =
+                bbox_to_xyz(bbox.left, bbox.bottom, bbox.right, bbox.top, *zoom);
             append_rect(
                 &mut ranges,
                 TileRect::new(*zoom, min_x, min_y, max_x, max_y),
@@ -275,9 +283,8 @@ async fn run_tile_copy(args: CopyArgs, state: ServerState) -> MartinCpResult<()>
 
     let progress = Progress::new(&tiles);
     info!(
-        "Copying {} {} tiles from {} to {}",
+        "Copying {} {tile_info} tiles from {} to {}",
         progress.total,
-        tile_info,
         args.source,
         args.output_file.display()
     );
@@ -333,6 +340,21 @@ async fn run_tile_copy(args: CopyArgs, state: ServerState) -> MartinCpResult<()>
     )?;
 
     info!("{progress}");
+
+    for (key, value) in args.set_meta {
+        info!("Setting metadata key={key} value={value}");
+        mbt.set_metadata_value(&mut conn, &key, value).await?;
+    }
+
+    if !args.skip_agg_tiles_hash {
+        if progress.non_empty.load(Ordering::Relaxed) == 0 {
+            info!("No tiles were copied, skipping agg_tiles_hash computation");
+        } else {
+            info!("Computing agg_tiles_hash value...");
+            mbt.update_agg_tiles_hash(&mut conn).await?;
+        }
+    }
+
     Ok(())
 }
 
@@ -393,11 +415,6 @@ mod tests {
     use insta::assert_yaml_snapshot;
 
     use super::*;
-
-    #[test]
-    fn test_tile_index() {
-        assert_eq!((0, 0), tile_index(-180.0, 85.0511, 0));
-    }
 
     #[test]
     fn test_compute_tile_ranges() {

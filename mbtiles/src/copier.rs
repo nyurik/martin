@@ -100,12 +100,12 @@ impl MbtilesCopier {
         Self {
             src_file: src_filepath,
             dst_file: dst_filepath,
-            zoom_levels: Vec::default(),
             dst_type_cli: None,
             dst_type: None,
             on_duplicate: CopyDuplicateMode::Override,
             min_zoom: None,
             max_zoom: None,
+            zoom_levels: Vec::default(),
             diff_with_file: None,
             apply_patch: None,
             skip_agg_tiles_hash: false,
@@ -612,6 +612,8 @@ mod tests {
     use sqlx::{Decode, Sqlite, SqliteConnection, Type};
 
     use super::*;
+
+    // TODO: Most of these tests are duplicating the tests from tests/mbtiles.rs, and should be cleaned up/removed.
 
     const FLAT: Option<MbtTypeCli> = Some(MbtTypeCli::Flat);
     const FLAT_WITH_HASH: Option<MbtTypeCli> = Some(MbtTypeCli::FlatWithHash);

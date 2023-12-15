@@ -290,6 +290,10 @@ test_pbf mb_mvt_2_3_1 world_cities/2/3/1
 >&2 echo "***** Test server response for table source with empty SRID *****"
 test_pbf points_empty_srid_0_0_0  points_empty_srid/0/0/0
 
+>&2 echo "***** Test server response for comments *****"
+test_jsn tbl_comment              MixPoints
+test_jsn fnc_comment              function_Mixed_Name
+
 kill_process $MARTIN_PROC_ID Martin
 
 test_log_has_str "$LOG_FILE" 'WARN  martin::pg::table_source] Table public.table_source has no spatial index on column geom'
@@ -370,6 +374,10 @@ test_font font_1      font/Overpass%20Mono%20Light/0-255
 test_font font_2      font/Overpass%20Mono%20Regular/0-255
 test_font font_3      font/Overpass%20Mono%20Regular,Overpass%20Mono%20Light/0-255
 
+# Test comments override
+test_jsn tbl_comment_cfg  MixPoints
+test_jsn fnc_comment_cfg  fnc_Mixed_Name
+
 kill_process $MARTIN_PROC_ID Martin
 test_log_has_str "$LOG_FILE" 'WARN  martin::pg::table_source] Table public.table_source has no spatial index on column geom'
 test_log_has_str "$LOG_FILE" 'WARN  martin::fonts] Ignoring duplicate font Overpass Mono Regular from tests'
@@ -396,7 +404,8 @@ if [[ "$MARTIN_CP_BIN" != "-" ]]; then
       --min-zoom 0 --max-zoom 6 "--bbox=-2,-1,142.84,45"
   test_martin_cp "normalized" "${CFG[@]}" \
       --source geography-class-png --mbtiles-type normalized --concurrency 3 \
-      --min-zoom 0 --max-zoom 6 "--bbox=-2,-1,142.84,45"
+      --min-zoom 0 --max-zoom 6 "--bbox=-2,-1,142.84,45" \
+      --set-meta "name=normalized" --set-meta=center=0,0,0
 
   unset DATABASE_URL
 
@@ -415,7 +424,6 @@ if [[ "$MBTILES_BIN" != "-" ]]; then
 
   set -x
 
-  $MBTILES_BIN --help 2>&1 | tee "$TEST_OUT_DIR/help.txt"
   $MBTILES_BIN summary ./tests/fixtures/mbtiles/world_cities.mbtiles 2>&1 | tee "$TEST_OUT_DIR/summary.txt"
   $MBTILES_BIN meta-all --help 2>&1 | tee "$TEST_OUT_DIR/meta-all_help.txt"
   $MBTILES_BIN meta-all ./tests/fixtures/mbtiles/world_cities.mbtiles 2>&1 | tee "$TEST_OUT_DIR/meta-all.txt"
@@ -425,9 +433,14 @@ if [[ "$MBTILES_BIN" != "-" ]]; then
   $MBTILES_BIN validate ./tests/fixtures/mbtiles/zoomed_world_cities.mbtiles 2>&1 | tee "$TEST_OUT_DIR/validate-ok.txt"
 
   set +e
-  $MBTILES_BIN validate ./tests/fixtures/files/bad_hash.mbtiles 2>&1 | tee "$TEST_OUT_DIR/validate-bad.txt"
+  $MBTILES_BIN validate ./tests/fixtures/files/invalid-tile-idx.mbtiles 2>&1 | tee "$TEST_OUT_DIR/validate-bad-tiles.txt"
   if [[ $? -eq 0 ]]; then
-    echo "ERROR: validate with bad_hash should have failed"
+    echo "ERROR: validate with invalid-tile-idx.mbtiles should have failed"
+    exit 1
+  fi
+  $MBTILES_BIN validate ./tests/fixtures/files/bad_hash.mbtiles 2>&1 | tee "$TEST_OUT_DIR/validate-bad-hash.txt"
+  if [[ $? -eq 0 ]]; then
+    echo "ERROR: validate with bad_hash.mbtiles should have failed"
     exit 1
   fi
   set -e
