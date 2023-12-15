@@ -254,64 +254,64 @@ jobs:
   #         docker stop fileserver
   #         docker rm fileserver
 
-  build:
-    name: Build ${{ matrix.target }}
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: true
-      matrix:
-        include:
-          - target: aarch64-apple-darwin
-            os: macOS-latest
-            cross: 'true'
-          - target: debian-x86_64
-            os: ubuntu-latest
-            cross: 'true'
-          - target: x86_64-apple-darwin
-            os: macOS-latest
-          - target: x86_64-pc-windows-msvc
-            os: windows-latest
-            ext: '.exe'
-          - target: x86_64-unknown-linux-gnu
-            os: ubuntu-latest
-    steps:
-      - name: Checkout sources
-        uses: actions/checkout@v4
-      - name: Rust Versions
-        run: rustc --version && cargo --version
-      - uses: Swatinem/rust-cache@v2
-        if: github.event_name != 'release' && github.event_name != 'workflow_dispatch'
-      - name: Build (.deb)
-        if: matrix.target == 'debian-x86_64'
-        run: |
-          set -x
-          sudo apt-get install -y dpkg dpkg-dev liblzma-dev
-          cargo install cargo-deb
-          cargo deb -v -p martin --output target/debian/debian-x86_64.deb
-          mkdir -p target_releases
-          mv target/debian/debian-x86_64.deb target_releases/
-      - name: Build
-        if: matrix.target != 'debian-x86_64'
-        run: |
-          set -x
-          rustup target add "${{ matrix.target }}"
-          export RUSTFLAGS='-C strip=debuginfo'
-          cargo build --release --target ${{ matrix.target }} --package mbtiles
-          cargo build --release --target ${{ matrix.target }} --package martin
-          mkdir -p target_releases
-          mv target/${{ matrix.target }}/release/martin${{ matrix.ext }} target_releases/
-          mv target/${{ matrix.target }}/release/martin-cp${{ matrix.ext }} target_releases/
-          mv target/${{ matrix.target }}/release/mbtiles${{ matrix.ext }} target_releases/
-      - name: Save build artifacts to build-${{ matrix.target }}
-        uses: actions/upload-artifact@v3
-        with:
-          name: build-${{ matrix.target }}
-          path: target_releases/*
+  # build:
+  #   name: Build ${{ matrix.target }}
+  #   runs-on: ${{ matrix.os }}
+  #   strategy:
+  #     fail-fast: true
+  #     matrix:
+  #       include:
+  #         - target: aarch64-apple-darwin
+  #           os: macOS-latest
+  #           cross: 'true'
+  #         - target: debian-x86_64
+  #           os: ubuntu-latest
+  #           cross: 'true'
+  #         - target: x86_64-apple-darwin
+  #           os: macOS-latest
+  #         - target: x86_64-pc-windows-msvc
+  #           os: windows-latest
+  #           ext: '.exe'
+  #         - target: x86_64-unknown-linux-gnu
+  #           os: ubuntu-latest
+  #   steps:
+  #     - name: Checkout sources
+  #       uses: actions/checkout@v4
+  #     - name: Rust Versions
+  #       run: rustc --version && cargo --version
+  #     - uses: Swatinem/rust-cache@v2
+  #       if: github.event_name != 'release' && github.event_name != 'workflow_dispatch'
+  #     - name: Build (.deb)
+  #       if: matrix.target == 'debian-x86_64'
+  #       run: |
+  #         set -x
+  #         sudo apt-get install -y dpkg dpkg-dev liblzma-dev
+  #         cargo install cargo-deb
+  #         cargo deb -v -p martin --output target/debian/debian-x86_64.deb
+  #         mkdir -p target_releases
+  #         mv target/debian/debian-x86_64.deb target_releases/
+  #     - name: Build
+  #       if: matrix.target != 'debian-x86_64'
+  #       run: |
+  #         set -x
+  #         rustup target add "${{ matrix.target }}"
+  #         export RUSTFLAGS='-C strip=debuginfo'
+  #         cargo build --release --target ${{ matrix.target }} --package mbtiles
+  #         cargo build --release --target ${{ matrix.target }} --package martin
+  #         mkdir -p target_releases
+  #         mv target/${{ matrix.target }}/release/martin${{ matrix.ext }} target_releases/
+  #         mv target/${{ matrix.target }}/release/martin-cp${{ matrix.ext }} target_releases/
+  #         mv target/${{ matrix.target }}/release/mbtiles${{ matrix.ext }} target_releases/
+  #     - name: Save build artifacts to build-${{ matrix.target }}
+  #       uses: actions/upload-artifact@v3
+  #       with:
+  #         name: build-${{ matrix.target }}
+  #         path: target_releases/*
 
   test-multi-os:
     name: Test on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
-    needs: [build]
+    #needs: [build]
     strategy:
       fail-fast: true
       matrix:
@@ -345,17 +345,8 @@ jobs:
         if: runner.os == 'windows'
         shell: pwsh
         run: |
-          # Download Nginx for Windows
-          Invoke-WebRequest -Uri "http://nginx.org/download/nginx-1.24.0.zip" -OutFile "nginx.zip"
-          # Unzip
-          Expand-Archive -Path "nginx.zip" -DestinationPath "nginx"
-          Rename-Item -Path "nginx/nginx*" -NewName "nginx"
-          Move-Item -Path "nginx/nginx" -Destination "." -Force
-
-          # Create a directory for Nginx logs (required for running Nginx on Windows)
-          New-Item -Path "/nginx/logs" -ItemType Directory
-
-          dir D:\a\martin\martin\nginx
+          dir
+          echo "$PWD.Path"
           # Replace the default Nginx configuration file
           $nginxConf = "worker_processes  1; `r`n" +
                         "events { `r`n" +
@@ -375,23 +366,30 @@ jobs:
                         "        } `r`n" +
                         "    } `r`n" +
                         "}"
-          Set-Content -Path "nginx/conf/nginx.conf" -Value $nginxConf
+          Set-Content -Path "C:\tools\nginx-1.25.3\conf\nginx.conf" -Value $nginxConf
+          Get-Content -Path "C:\tools\nginx-1.25.3\conf\nginx.conf"
       - name: Start Nginx (on Windows systems)
         if: runner.os == 'windows'
         shell: pwsh
         run: |
-          Start-Process -FilePath "nginx/nginx.exe"
+          Get-Service -ErrorAction SilentlyContinue
+          Get-CimInstance -ClassName Win32_Service
+          Start-Service nginx
+          #Start-Process -FilePath "C:\tools\nginx-1.25.3\nginx.exe"
+          dir C:\tools\nginx-1.25.3\logs\
           Start-Sleep -Seconds 5
+          netstat -a
       - name: Print Nginx Error Logs (on Windows systems)
         if: runner.os == 'windows'
         shell: pwsh
         run: |
-          #Get-Content -Path "nginx/logs/error.log"
-          dir D:\a\martin\martin\nginx
-      - name: Setup tmate session
-        uses: mxschmitt/action-tmate@v3
-        with:
-          detached: true
+          #nginx -t
+          Get-Content -Path "C:\tools\nginx-1.25.3\logs\error.log"
+          dir D:\a\martin\martin\
+      # - name: Setup tmate session
+      #   uses: mxschmitt/action-tmate@v3
+      #   with:
+      #     detached: true
       - name: Start postgres
         uses: nyurik/action-setup-postgis@v1.1
         id: pg
