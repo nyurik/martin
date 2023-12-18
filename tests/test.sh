@@ -5,7 +5,7 @@ MARTIN_DATABASE_URL="${DATABASE_URL:-postgres://postgres@localhost/db}"
 unset DATABASE_URL
 
 # TODO: use  --fail-with-body  to get the response body on failure
-CURL=${CURL:-curl --verbose --show-error --fail-with-body --compressed}
+CURL=${CURL:-curl --silent --show-error --fail --compressed}
 
 MARTIN_BUILD_ALL="${MARTIN_BUILD_ALL:-cargo build}"
 
