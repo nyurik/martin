@@ -372,8 +372,9 @@ jobs:
         if: runner.os == 'windows'
         shell: pwsh
         run: |
-          Get-Service -ErrorAction SilentlyContinue
-          Get-CimInstance -ClassName Win32_Service
+          #Get-Service -ErrorAction SilentlyContinue
+          #Get-CimInstance -ClassName Win32_Service
+          Set-Service nginx -StartupType manual
           Start-Service nginx
           #Start-Process -FilePath "C:\tools\nginx-1.25.3\nginx.exe"
           dir C:\tools\nginx-1.25.3\logs\
