@@ -371,8 +371,8 @@ jobs:
         if: runner.os == 'windows'
         shell: pwsh
         run: |
-          #Start-Service -Name "nginx"
-          Start-Process -FilePath "C:\tools\nginx-1.25.3\nginx.exe"
+          Start-Service nginx
+          #Start-Process -FilePath "C:\tools\nginx-1.25.3\nginx.exe"
           dir C:\tools\nginx-1.25.3\logs\
           Start-Sleep -Seconds 5
           netstat -a
