@@ -311,7 +311,7 @@ jobs:
   test-multi-os:
     name: Test on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
-    needs: [build]
+    #needs: [build]
     strategy:
       fail-fast: true
       matrix:
