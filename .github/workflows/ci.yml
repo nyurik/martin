@@ -348,29 +348,32 @@ jobs:
           dir
           echo "$PWD.Path"
           # Replace the default Nginx configuration file
-          # $nginxConf = "worker_processes  1; `r`n" +
-          #               "events { `r`n" +
-          #               "    worker_connections  1024; `r`n" +
-          #               "} `r`n" +
-          #               "http { `r`n" +
-          #               "    include       mime.types; `r`n" +
-          #               "    default_type  application/octet-stream; `r`n" +
-          #               "    sendfile        on; `r`n" +
-          #               "    keepalive_timeout  65; `r`n" +
-          #               "    server { `r`n" +
-          #               "        listen       5412; `r`n" +
-          #               "        server_name  localhost; `r`n" +
-          #               "        location / { `r`n" +
-          #               "            root   " + $PWD.Path + "/tests/fixtures/pmtiles2; `r`n" +
-          #               "            index  index.html index.htm; `r`n" +
-          #               "        } `r`n" +
-          #               "    } `r`n" +
-          #               "}"
-          # Set-Content -Path "C:\tools\nginx-1.25.3\conf\nginx.conf" -Value $nginxConf
+          $nginxConf = "worker_processes  1; `r`n" +
+                        "events { `r`n" +
+                        "    worker_connections  1024; `r`n" +
+                        "} `r`n" +
+                        "http { `r`n" +
+                        "    include       mime.types; `r`n" +
+                        "    default_type  application/octet-stream; `r`n" +
+                        "    sendfile        on; `r`n" +
+                        "    keepalive_timeout  65; `r`n" +
+                        "    server { `r`n" +
+                        "        listen       5412; `r`n" +
+                        "        server_name  localhost; `r`n" +
+                        "        location / { `r`n" +
+                        "            root   " + $PWD.Path + "/tests/fixtures/pmtiles2; `r`n" +
+                        "            index  index.html index.htm; `r`n" +
+                        "        } `r`n" +
+                        "    } `r`n" +
+                        "}"
+          Set-Content -Path "C:\tools\nginx-1.25.3\conf\nginx.conf" -Value $nginxConf
+          Get-Content -Path "C:\tools\nginx-1.25.3\conf\nginx.conf"
       - name: Start Nginx (on Windows systems)
         if: runner.os == 'windows'
         shell: pwsh
         run: |
+          Get-Service
+          Get-CimInstance
           Start-Service nginx
           #Start-Process -FilePath "C:\tools\nginx-1.25.3\nginx.exe"
           dir C:\tools\nginx-1.25.3\logs\
