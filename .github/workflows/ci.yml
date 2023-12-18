@@ -345,6 +345,8 @@ jobs:
         if: runner.os == 'windows'
         shell: pwsh
         run: |
+          dir
+          echo "$PWD.Path"
           # Replace the default Nginx configuration file
           $nginxConf = "worker_processes  1; `r`n" +
                         "events { `r`n" +
@@ -371,12 +373,13 @@ jobs:
         run: |
           Start-Process -FilePath "C:\tools\nginx-1.25.3\nginx.exe"
           Start-Sleep -Seconds 5
-      # - name: Print Nginx Error Logs (on Windows systems)
-      #   if: runner.os == 'windows'
-      #   shell: pwsh
-      #   run: |
-      #     #Get-Content -Path "nginx/logs/error.log"
-      #     dir D:\a\martin\martin\nginx
+      - name: Print Nginx Error Logs (on Windows systems)
+        if: runner.os == 'windows'
+        shell: pwsh
+        run: |
+          nginx -t
+          #Get-Content -Path "C:\tools\nginx-1.25.3\logs\error.log"
+          dir D:\a\martin\martin\
       # - name: Setup tmate session
       #   uses: mxschmitt/action-tmate@v3
       #   with:
