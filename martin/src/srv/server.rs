@@ -123,6 +123,9 @@ pub fn router(cfg: &mut web::ServiceConfig, #[allow(unused_variables)] usr_cfg: 
     #[cfg(feature = "fonts")]
     cfg.service(crate::srv::fonts::get_font);
 
+    #[cfg(feature = "render")]
+    cfg.service(crate::srv::tiles::get_rendered_tile);
+
     #[cfg(feature = "webui")]
     {
         // TODO: this can probably be simplified with a wrapping middleware,

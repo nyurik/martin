@@ -7,7 +7,9 @@ use actix_web::http::header::{
 use actix_web::web::{Data, Path, Query};
 use actix_web::{HttpMessage, HttpRequest, HttpResponse, Result as ActixResult, route};
 use futures::future::try_join_all;
-use log::trace;
+use log::{trace, warn};
+#[cfg(feature = "render")]
+use maplibre_native::ImageRendererOptions;
 use martin_tile_utils::{
     Encoding, Format, TileCoord, TileInfo, decode_brotli, decode_gzip, encode_brotli, encode_gzip,
 };
@@ -27,12 +29,53 @@ static SUPPORTED_ENC: &[HeaderEnc] = &[
     HeaderEnc::identity(),
 ];
 
-#[derive(Deserialize, Clone)]
+#[derive(Deserialize, Clone, Debug)]
 pub struct TileRequest {
     source_ids: String,
     z: u8,
     x: u32,
     y: u32,
+}
+
+#[cfg(feature = "render")]
+#[route("/style/{source_ids}/{z}/{x}/{y}.png", method = "GET", method = "HEAD")]
+async fn get_rendered_tile(
+    // req: HttpRequest,
+    // srv_config: Data<SrvConfig>,
+    path: Path<TileRequest>,
+    // sources: Data<TileSources>,
+    // cache: Data<OptMainCache>,
+) -> ActixResult<HttpResponse> {
+    // let src = DynTileSource::new(
+    //     sources.as_ref(),
+    //     &path.source_ids,
+    //     Some(path.z),
+    //     req.query_string(),
+    //     req.get_header::<AcceptEncoding>(),
+    //     srv_config.preferred_encoding,
+    //     cache.as_ref().as_ref(),
+    // )?;
+    //
+    // let tile = src
+    //     .get_tile_content(TileCoord {
+    //         z: path.z,
+    //         x: path.x,
+    //         y: path.y,
+    //     })
+    //     .await?;
+
+    // TODO: somehow pass the data to the renderer
+
+    warn!("Instantiating");
+    let mut map = ImageRendererOptions::new().build_tile_renderer();
+    warn!("style");
+    map.set_style_url("https://demotiles.maplibre.org/style.json");
+    warn!("render_tile {path:?}");
+    let data = map.render_tile(path.z, path.x, path.y);
+    warn!("responding");
+    let mut response = HttpResponse::Ok();
+    response.content_type(Format::Png.content_type());
+    Ok(response.body(data.as_slice().to_owned()))
 }
 
 #[route("/{source_ids}/{z}/{x}/{y}", method = "GET", method = "HEAD")]
