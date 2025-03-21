@@ -38,8 +38,6 @@ bit-set = "0.8"
 brotli = ">=5, <8"
 clap = { version = "4", features = ["derive", "unstable-markdown"] }
 criterion = { version = "0.5", features = ["async_futures", "async_tokio", "html_reports"] }
-# ring feature does not require NASM windows executable, but works slower
-#rustls = { version = "0.23", default-features = false, features = ["logging", "std", "tls12", "ring"] }
 ctor = "0.4.1"
 dashmap = { version =  "6.1.0", features = ["serde", "inline", "rayon"] }
 deadpool-postgres = "0.14"
@@ -71,6 +69,8 @@ pretty_assertions = "1"
 regex = "1"
 rstest = "0.25"
 rustls = "0.23.25"
+# ring feature does not require NASM windows executable, but works slower
+#rustls = { version = "0.23", default-features = false, features = ["logging", "std", "tls12", "ring"] }
 rustls-native-certs = "0.8"
 rustls-pemfile = "2"
 semver = "1"
@@ -108,4 +108,4 @@ lto = true
 codegen-units = 1
 
 [patch.crates-io]
-maplibre_native = { path = "../../maplibre/maplibre-native-rs" }
+maplibre_native = { path = "../../personal/maplibre-native-rs" }

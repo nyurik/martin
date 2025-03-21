@@ -105,6 +105,6 @@ fn main() {
     #[cfg(feature = "webui")]
     webui();
 
-    println!("cargo:rustc-link-search=native=/usr/lib/x86_64-linux-gnu");
-    println!("cargo:rustc-link-lib=dylib=sqlite3");
+    // println!("cargo:rustc-link-search=native=/usr/lib/x86_64-linux-gnu");
+    // println!("cargo:rustc-link-lib=dylib=sqlite3");
 }
